@@ -1,0 +1,17 @@
+// Datei: src/main/java/com/example/weapons/ExampleWeaponsMod.java
+package com.example.weapons;
+
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+
+@Mod(ExampleWeaponsMod.MOD_ID)
+public class ExampleWeaponsMod {
+
+    public static final String MOD_ID = "exampleweapons";
+
+    public ExampleWeaponsMod() {
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModItems.ITEMS.register(modEventBus);
+    }
+}
