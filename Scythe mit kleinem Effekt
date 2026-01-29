@@ -1,0 +1,33 @@
+// Datei: src/main/java/com/example/weapons/ScytheItem.java
+package com.example.weapons;
+
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+
+public class ScytheItem extends SwordItem {
+
+    public ScytheItem(Tier tier, int attackDamageModifier, float attackSpeedModifier, Properties properties) {
+        super(tier, attackDamageModifier, attackSpeedModifier, properties);
+    }
+
+    @Override
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        // Beispiel: kleiner AoE‑Effekt um das Ziel herum
+        Level level = attacker.level();
+        if (!level.isClientSide) {
+            double radius = 2.5D;
+            level.getEntities(target, target.getBoundingBox().inflate(radius), e -> e instanceof LivingEntity && e != attacker)
+                    .forEach(e -> {
+                        ((LivingEntity) e).hurt(level.damageSources().playerAttack((Player) attacker), 2.0F);
+                    });
+        }
+
+        // Haltbarkeit verbrauchen
+        stack.hurtAndBreak(1, attacker, entity -> entity.broadcastBreakEvent(attacker.getUsedItemHand()));
+        return super.hurtEnemy(stack, target, attacker);
+    }
+}
