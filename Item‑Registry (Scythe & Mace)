@@ -1,0 +1,44 @@
+// Datei: src/main/java/com/example/weapons/ModItems.java
+package com.example.weapons;
+
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Tiers;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.Rarity;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public class ModItems {
+
+    public static final DeferredRegister<Item> ITEMS =
+            DeferredRegister.create(ForgeRegistries.ITEMS, ExampleWeaponsMod.MOD_ID);
+
+    // einfache „Scythe“ (Sensen‑Waffe) – basiert auf SwordItem
+    public static final RegistryObject<Item> SCYTHE = ITEMS.register(
+            "scythe",
+            () -> new ScytheItem(
+                    Tiers.DIAMOND,
+                    5,          // zusätzlicher Schaden
+                    -3.2F,      // Angriffsgeschwindigkeit
+                    new Properties()
+                            .stacksTo(1)
+                            .rarity(Rarity.RARE)
+            )
+    );
+
+    // „Mace“ mit Spezialfähigkeit
+    public static final RegistryObject<Item> MACE = ITEMS.register(
+            "mace",
+            () -> new MaceItem(
+                    Tiers.NETHERITE,
+                    7,
+                    -3.4F,
+                    new Properties()
+                            .stacksTo(1)
+                            .rarity(Rarity.EPIC)
+            )
+    );
+}
