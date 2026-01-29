@@ -1,0 +1,84 @@
+package com.example.weapons;
+
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.Level;
+import net.minecraft.nbt.CompoundTag;
+
+import java.util.UUID;
+
+public class LifestealMaceItem extends SwordItem {
+
+    private static final String TAG_LIFESTEAL_HEARTS = "LifestealHearts";
+    private static final UUID LIFESTEAL_HEALTH_UUID = UUID.fromString("a1b2c3d4-e5f6-7890-1234-abcdefabcdef");
+
+    public LifestealMaceItem(Tier tier, int attackDamage, float attackSpeed, Properties props) {
+        super(tier, attackDamage, attackSpeed, props);
+    }
+
+    public static int getStoredHearts(ItemStack stack) {
+        return stack.getOrCreateTag().getInt(TAG_LIFESTEAL_HEARTS);
+    }
+
+    public static void addStoredHeart(ItemStack stack) {
+        CompoundTag tag = stack.getOrCreateTag();
+        tag.putInt(TAG_LIFESTEAL_HEARTS, tag.getInt(TAG_LIFESTEAL_HEARTS) + 1);
+    }
+
+    @Override
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        boolean result = super.hurtEnemy(stack, target, attacker);
+
+        if (!attacker.level().isClientSide && attacker instanceof Player player) {
+            if (!target.isAlive() || target.isDeadOrDying()) {
+                addStoredHeart(stack);
+                attacker.level().playSound(null, attacker.blockPosition(),
+                        net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
+                        net.minecraft.sounds.SoundSource.PLAYERS,
+                        0.7F, 1.2F);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, LivingEntity entity, int slot, boolean selected) {
+        if (!(entity instanceof Player player) || level.isClientSide) return;
+
+        int hearts = getStoredHearts(stack);
+        double bonusHealth = hearts * 2.0;
+
+        if (player.getAttribute(Attributes.MAX_HEALTH) == null) return;
+
+        player.getAttribute(Attributes.MAX_HEALTH).removeModifier(LIFESTEAL_HEALTH_UUID);
+
+        if (player.getInventory().contains(stack) && bonusHealth > 0) {
+            AttributeModifier modifier = new AttributeModifier(
+                    LIFESTEAL_HEALTH_UUID,
+                    "lifesteal_bonus_health",
+                    bonusHealth,
+                    AttributeModifier.Operation.ADDITION
+            );
+            player.getAttribute(Attributes.MAX_HEALTH).addTransientModifier(modifier);
+        }
+    }
+
+    @Override
+    public void onCraftedBy(ItemStack stack, Level level, Player player) {
+        super.onCraftedBy(stack, level, player);
+
+        if (stack.getEnchantmentTags().isEmpty()) {
+            stack.enchant(Enchantments.DENSITY, 10);
+            stack.enchant(Enchantments.BREACH, 10);
+            stack.enchant(Enchantments.FIRE_ASPECT, 2);
+            stack.enchant(Enchantments.UNBREAKING, 10);
+            stack.enchant(Enchantments.MENDING, 1);
+            stack.enchant(Enchantments.WIND_BURST, 5);
+        }
+    }
+}
