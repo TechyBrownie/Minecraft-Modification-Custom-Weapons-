@@ -1,0 +1,49 @@
+// Datei: src/main/java/com/example/weapons/MaceItem.java
+package com.example.weapons;
+
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+
+public class MaceItem extends SwordItem {
+
+    public MaceItem(Tier tier, int attackDamageModifier, float attackSpeedModifier, Properties properties) {
+        super(tier, attackDamageModifier, attackSpeedModifier, properties);
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+
+        if (!level.isClientSide) {
+            double radius = 4.0D;
+            AABB box = player.getBoundingBox().inflate(radius);
+            level.getEntities(player, box, e -> e instanceof LivingEntity && e != player)
+                    .forEach(e -> {
+                        LivingEntity le = (LivingEntity) e;
+                        double dx = le.getX() - player.getX();
+                        double dz = le.getZ() - player.getZ();
+                        double strength = 1.2D;
+
+                        le.push(dx * strength, 0.4D, dz * strength);
+                        le.hurt(level.damageSources().playerAttack(player), 4.0F);
+                    });
+
+            level.playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.0F, 0.7F);
+
+            // Cooldown & Haltbarkeit
+            player.getCooldowns().addCooldown(this, 20 * 8); // 8 Sekunden
+            stack.hurtAndBreak(2, player, p -> p.broadcastBreakEvent(hand));
+        }
+
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+    }
+}
